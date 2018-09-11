@@ -1,0 +1,54 @@
+__________________________________________________________
+LOGIN (http://51.38.234.54/users-api/login OU http://vps549581.ovh.net/users-api/login)
+
+Format requête POST - Content-Type: application/json
+{
+	"email" : "test.test@test.fr",
+	"password" : "test" (non chiffrer)	
+}
+
+Format réponse - Content-Type: application/json
+{
+	"token" : "5b9785c1ba8e7c037ef3ab8d",
+	"state": "success" or "error"	
+}
+__________________________________________________________
+CREATE USER (http://51.38.234.54/users-api/createUser OU http://vps549581.ovh.net/users-api/createUser)
+
+Format requête POST - Content-Type: application/json
+{
+	"email" : "---@---.fr,
+	"password", "---" (non chiffrer)
+}
+
+Format réponse - Content-Type: application /json
+{
+	"state": "success" or "error"	
+}
+
+__________________________________________________________
+EDIT USER (http://51.38.234.54/users-api/editUser OU http://vps549581.ovh.net/users-api/editUser)
+
+Format requête POST - Content-Type: application/json
+{
+	"email" : "---@---.fr,
+	"password", "---" (non chiffrer),
+	"token" : "5b9785c1ba8e7c037ef3ab8d"
+}
+
+Format réponse - Content-Type: application /json
+{
+	"state": "success" or "error"	
+}
+__________________________________________________________ (ENCORE A FAIRE)
+GET USER (http://51.38.234.54/users-api/getUser OU http://vps549581.ovh.net/users-api/getUser)
+
+Format requête POST - Content-Type: application/json
+{
+	"token" : "5b9785c1ba8e7c037ef3ab8d"
+}
+
+Format réponse - Content-Type: application /json
+{
+	
+}
