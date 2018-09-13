@@ -50,5 +50,7 @@ Format requête POST - Content-Type: application/json
 
 Format réponse - Content-Type: application /json
 {
-	
+	"email": "---@---.fr,
+	"password": "---" (non chiffrer),
+	"state" : "success" or "error"
 }

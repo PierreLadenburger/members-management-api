@@ -83,6 +83,26 @@ app.post('/editUser', function (req, res) {
     });
 });
 
+
+app.post('/getUser', function (req, res) {
+    MongoClient.connect(url, function(err, client) {
+        const db = client.db(dbName);
+        var query = {
+            _id: ObjectId(req.body.token)
+        };
+        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+        db.collection('users').findOne(query, function(err, result) {
+            if (result) {
+                res.send(JSON.stringify({"email": result.email, "password" : result.password , "state": "success"}));
+
+            } else {
+                res.send(JSON.stringify({"state": "error"}));
+            }
+            db.close();
+        });
+    })
+});
+
 app.post('/login', function (req, res) {
         MongoClient.connect(url, function(err, client) {
 	const db = client.db(dbName);
