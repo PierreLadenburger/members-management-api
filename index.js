@@ -24,16 +24,34 @@ app.post('/createUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
     MongoClient.connect(url, function (err, client) {
        const db = client.db(dbName);
+       var dt = dateTime.create();
+       var formatted = dt.format('d-m-Y H:M:S');
        var query = {
            email: req.body.email,
-           password: md5(req.body.password)
+           password: md5(req.body.password),
+           firstname: req.body.firstname,
+           lastname: req.body.lastname,
+           age: req.body.age,
+           creationDate: new Date(),
        };
-       db.collection('users').insertOne(query, function (err, result) {
-            if (result) {
-                res.send(JSON.stringify({"state": "success"}));
-            } else {
-                res.send(JSON.stringify({"state": "error"}));
-            }
+       var checkEmail = {
+           email: req.body.email
+       };
+       db.collection('users').findOne(checkEmail, function (err, result) {
+           if (result) {
+               res.send(JSON.stringify({"state": "error", "message": "email already used"}));
+           }
+           else {
+               db.collection('users').insertOne(query, function (err, result) {
+                   if (result) {
+                       res.send(JSON.stringify({"state": "success"}));
+                   } else {
+                       res.send(JSON.stringify({"state": "error"}));
+                   }
+                   client.close();
+               });
+           }
+            client.close();
        });
     });
 });
@@ -45,7 +63,7 @@ app.post('/editUser', function (req, res) {
        const db = client.db(dbName);
 
     var query = {
-	    _id: ObjectId(req.body.token)
+	    token: req.body.token
        };
 	var update = {
 	    $set : {
@@ -59,28 +77,35 @@ app.post('/editUser', function (req, res) {
             } else {
                 res.send(JSON.stringify({"state": "error"}));
             }
+        client.close();
        });
     });
 });
 
 
 app.post('/getUser', function (req, res) {
-    MongoClient.connect(url, function(err, client) {
-        const db = client.db(dbName);
-        var query = {
-            token: req.body.token
-        };
-        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-        db.collection('users').findOne(query, function(err, result) {
-            if (result) {
-                res.send(JSON.stringify(result));
+    if (req.body.token !== '') {
 
-            } else {
-                res.send(JSON.stringify({"state": "error"}));
-            }
-            db.close();
-        });
-    })
+        MongoClient.connect(url, function (err, client) {
+            const db = client.db(dbName);
+            var query = {
+                token: req.body.token
+            };
+            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            db.collection('users').findOne(query, function (err, result) {
+                if (result) {
+                    res.send(JSON.stringify({"userData" : result, "state" : "success"}));
+
+                } else {
+                    res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+                }
+                client.close();
+            });
+        })
+    }
+    else {
+        res.send(JSON.stringify({"state": "error"}));
+    }
 });
 
 app.post('/usersList', function (req, res) {
@@ -94,7 +119,7 @@ app.post('/usersList', function (req, res) {
             } else {
                 res.send(JSON.stringify({"state": "error"}));
             }
-            db.close();
+            client.close();
         });
     })
 });
@@ -116,39 +141,38 @@ app.post('/login', function (req, res) {
         };
         res.setHeader('Content-Type', 'application/json; charset=UTF-8');
         db.collection('users').findOneAndUpdate(query, update,  function(err, result) {
-            if (result) {
-
+            if (result.value != null) {
                 res.send(JSON.stringify({"token": md5(token), "state": "success"}));
 
             } else {
                 res.send(JSON.stringify({"state": "error"}));
             }
-            db.close();
+            client.close();
         });
     })
 });
 
 app.post('/logout', function (req, res) {
-    MongoClient.connect(url, function(err, client) {
-        const db = client.db(dbName);
-        var query = {
-            token: req.body.token
-        };
-        var update = {
-            $set : { "token" : ""
-            }
-        };
-        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-        db.collection('users').findOneAndUpdate(query, update, function(err, result) {
-            if (result) {
-                res.send(JSON.stringify({"state": "success"}));
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+        MongoClient.connect(url, function(err, client) {
+            var query = {
+                token: req.body.token
+            };
+            var updateToken = {
+                $unset : { "token" : ""
+                }
+            };
+            const db = client.db(dbName);
+            db.collection('users').findOneAndUpdate(query, updateToken, function(err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success"}));
 
-            } else {
-                res.send(JSON.stringify({"state": "error"}));
-            }
-            db.close();
+                } else {
+                    res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+                }
+                client.close();
+            });
         });
-    })
 });
 
 app.post('/view', function (req, res) {
@@ -168,9 +192,9 @@ app.post('/delUser', function (req, res) {
                 res.send(JSON.stringify({"state": "success"}));
 
             } else {
-                res.send(JSON.stringify({"state": "error"}));
+                res.send(JSON.stringify({"state": "error", "message": "bad token"}));
             }
-            db.close();
+            client.close();
         });
     })
 });
