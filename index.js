@@ -19,41 +19,64 @@ app.get('/', function (req, res) {
     res.send("OK");
 });
 
-// Create new user in users collection
+// Insert a user in db (email, password, firstname, lastname, dateOfBirth)
 app.post('/createUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-    MongoClient.connect(url, function (err, client) {
-       const db = client.db(dbName);
-       var dt = dateTime.create();
-       var formatted = dt.format('d-m-Y H:M:S');
-       var query = {
-           email: req.body.email,
-           password: md5(req.body.password),
-           firstname: req.body.firstname,
-           lastname: req.body.lastname,
-           age: req.body.age,
-           creationDate: new Date(),
-       };
-       var checkEmail = {
-           email: req.body.email
-       };
-       db.collection('users').findOne(checkEmail, function (err, result) {
-           if (result) {
-               res.send(JSON.stringify({"state": "error", "message": "email already used"}));
-           }
-           else {
-               db.collection('users').insertOne(query, function (err, result) {
-                   if (result) {
-                       res.send(JSON.stringify({"state": "success"}));
-                   } else {
-                       res.send(JSON.stringify({"state": "error"}));
-                   }
-                   client.close();
-               });
-           }
+    if (req.body.email !== '') {
+        MongoClient.connect(url, function (err, client) {
+            const db = client.db(dbName);
+            var dt = dateTime.create();
+            var formatted = dt.format('d-m-Y H:M:S');
+            var query = {
+                email: req.body.email,
+                password: md5(req.body.password),
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                dateOfBirth: new Date(req.body.dateOfBirth),
+                creationDate: new Date(),
+            };
+            var checkEmail = {
+                email: req.body.email
+            };
+            db.collection('users').findOne(checkEmail, function (err, result) {
+                if (result) {
+                    res.send(JSON.stringify({"state": "error", "message": "email already used"}));
+                }
+                else {
+                    db.collection('users').insertOne(query, function (err, result) {
+                        if (result) {
+                            res.send(JSON.stringify({"state": "success"}));
+                        } else {
+                            res.send(JSON.stringify({"state": "error", "message": "insertion failed"}));
+                        }
+                        client.close();
+                    });
+                }
+                client.close();
+            });
+        });
+    } else  {
+        res.send(JSON.stringify({"state": "error", "message": "bad email"}));
+    }
+});
+
+app.post('/delUser', function (req, res) {
+    MongoClient.connect(url, function(err, client) {
+        const db = client.db(dbName);
+        var query = {
+            token: req.body.token
+        };
+        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+        db.collection('users').findOneAndDelete(query, function(err, result) {
+            if (result.value != null) {
+                res.send(JSON.stringify({"state": "success"}));
+
+            } else {
+                res.send(JSON.stringify({"state" : "error", "message" : "bad token"}));
+            }
             client.close();
-       });
-    });
+        });
+    })
 });
 
 
@@ -62,28 +85,53 @@ app.post('/editUser', function (req, res) {
     MongoClient.connect(url, function (err, client) {
        const db = client.db(dbName);
 
-    var query = {
-	    token: req.body.token
-       };
-	var update = {
-	    $set : {
-		email: req.body.email,
-		password: req.body.password
-	    }
-	};
-	db.collection('users').updateOne(query, update, function (err, result) {
-            if (result) {
-                res.send(JSON.stringify({"state": "success"}));
-            } else {
-                res.send(JSON.stringify({"state": "error"}));
-            }
-        client.close();
-       });
+        var query = {
+            token: req.body.token
+        };
+        if (req.body.password !== '')
+        {
+           var update = {
+               $set : {
+                   email: req.body.email,
+                   password: md5(req.body.password),
+                   firstname: req.body.firstname,
+                   lastname: req.body.lastname,
+                   dateOfBirth: req.body.dateOfBirth
+               }
+           };
+           db.collection('users').updateOne(query, update, function (err, result) {
+               if (result) {
+                   res.send(JSON.stringify({"state": "success"}));
+               } else {
+                   res.send(JSON.stringify({"state": "error"}));
+               }
+               client.close();
+           });
+        } else {
+            var update = {
+                $set : {
+                    email: req.body.email,
+                    firstname: req.body.firstname,
+                    lastname: req.body.lastname,
+                    dateOfBirth: req.body.dateOfBirth
+                }
+            };
+            db.collection('users').updateOne(query, update, function (err, result) {
+                if (result) {
+                    res.send(JSON.stringify({"state": "success"}));
+                } else {
+                    res.send(JSON.stringify({"state": "error"}));
+                }
+                client.close();
+            });
+        }
+
     });
 });
 
 
 app.post('/getUser', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
     if (req.body.token !== '') {
 
         MongoClient.connect(url, function (err, client) {
@@ -91,7 +139,6 @@ app.post('/getUser', function (req, res) {
             var query = {
                 token: req.body.token
             };
-            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
             db.collection('users').findOne(query, function (err, result) {
                 if (result) {
                     res.send(JSON.stringify({"userData" : result, "state" : "success"}));
@@ -104,24 +151,8 @@ app.post('/getUser', function (req, res) {
         })
     }
     else {
-        res.send(JSON.stringify({"state": "error"}));
+        res.send(JSON.stringify({"state": "error", "message": "bad token"}));
     }
-});
-
-app.post('/usersList', function (req, res) {
-    MongoClient.connect(url, function(err, client) {
-        const db = client.db(dbName);
-        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-        db.collection('users').find({}).toArray(function(err, result) {
-            if (result) {
-                res.send(JSON.stringify({"users": result, "state": "success"}));
-
-            } else {
-                res.send(JSON.stringify({"state": "error"}));
-            }
-            client.close();
-        });
-    })
 });
 
 app.post('/login', function (req, res) {
@@ -175,24 +206,16 @@ app.post('/logout', function (req, res) {
         });
 });
 
-app.post('/view', function (req, res) {
-    res.send(req.body);
-});
-
-
-app.post('/delUser', function (req, res) {
+app.post('/usersList', function (req, res) {
     MongoClient.connect(url, function(err, client) {
         const db = client.db(dbName);
-        var query = {
-            token: req.body.token
-        };
         res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-        db.collection('users').deleteOne(query, function(err, result) {
+        db.collection('users').find({}).toArray(function(err, result) {
             if (result) {
-                res.send(JSON.stringify({"state": "success"}));
+                res.send(JSON.stringify({"users": result, "state": "success"}));
 
             } else {
-                res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+                res.send(JSON.stringify({"state": "error"}));
             }
             client.close();
         });
