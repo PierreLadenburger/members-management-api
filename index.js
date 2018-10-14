@@ -82,38 +82,17 @@ app.post('/delUser', function (req, res) {
 
 app.post('/editUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-    MongoClient.connect(url, function (err, client) {
-       const db = client.db(dbName);
-
-        var query = {
-            token: req.body.token
-        };
-        if (req.body.password !== '')
-        {
-           var update = {
-               $set : {
-                   email: req.body.email,
-                   password: md5(req.body.password),
-                   firstname: req.body.firstname,
-                   lastname: req.body.lastname,
-                   dateOfBirth: req.body.dateOfBirth
-               }
-           };
-           db.collection('users').updateOne(query, update, function (err, result) {
-               if (result) {
-                   res.send(JSON.stringify({"state": "success"}));
-               } else {
-                   res.send(JSON.stringify({"state": "error"}));
-               }
-               client.close();
-           });
-        } else {
+    if (typeof req.body.token !== 'undefined' && req.body.token !== "") {
+        MongoClient.connect(url, function (err, client) {
+            const db = client.db(dbName);
+            var query = {
+                token: req.body.token
+            };
             var update = {
-                $set : {
-                    email: req.body.email,
+                $set: {
                     firstname: req.body.firstname,
                     lastname: req.body.lastname,
-                    dateOfBirth: req.body.dateOfBirth
+                    dateOfBirth: new Date(req.body.dateOfBirth)
                 }
             };
             db.collection('users').updateOne(query, update, function (err, result) {
@@ -124,11 +103,40 @@ app.post('/editUser', function (req, res) {
                 }
                 client.close();
             });
-        }
 
-    });
+        });
+    } else {
+        res.send(JSON.stringify({"state" : "error", "message" : "bad token"}));
+    }
 });
 
+app.post('/changePassword', function (req, res) {
+    MongoClient.connect(url, function(err, client) {
+        const db = client.db(dbName);
+        var query = {
+            token: req.body.token,
+            password: md5(req.body.oldpassword)
+        };
+
+        var dt = dateTime.create();
+        var formatted = dt.format('d-m-Y H:M:S');
+        var token = req.body.email + '&'+ formatted;
+        var update = {
+            $set : { "password" : md5(req.body.newpassword)
+            }
+        };
+        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+        db.collection('users').findOneAndUpdate(query, update,  function(err, result) {
+            if (result.value != null) {
+                res.send(JSON.stringify({"state": "success"}));
+
+            } else {
+                res.send(JSON.stringify({"state": "error"}));
+            }
+            client.close();
+        });
+    })
+});
 
 app.post('/getUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
