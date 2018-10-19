@@ -115,14 +115,14 @@ app.post('/changePassword', function (req, res) {
         const db = client.db(dbName);
         var query = {
             token: req.body.token,
-            password: md5(req.body.oldpassword)
+            password: md5(req.body.oldPassword)
         };
 
         var dt = dateTime.create();
         var formatted = dt.format('d-m-Y H:M:S');
         var token = req.body.email + '&'+ formatted;
         var update = {
-            $set : { "password" : md5(req.body.newpassword)
+            $set : { "password" : md5(req.body.newPassword)
             }
         };
         res.setHeader('Content-Type', 'application/json; charset=UTF-8');
