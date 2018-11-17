@@ -1,4 +1,9 @@
 #!/bin/bash
 
-curl --request POST   --url http://vpication/json'   --data '{/login   --header 'content-type: appli
-"email" : "pierre.ladenburger@epitech.eu","password" : "123"
+curl --request POST \
+  --url http://vps549581.ovh.net/users-api/login \
+  --header 'content-type: application/json' \
+  --data '{
+"email" : "pierre.ladenburger@epitech.eu",
+"password" : "123"
+}'
