@@ -1,7 +1,5 @@
 #!/bin/bash
 
-apt-get install jq
-
 TOKEN=$(curl --request POST \
   --url http://vps549581.ovh.net/users-api/login \
   --header 'content-type: application/json' \
