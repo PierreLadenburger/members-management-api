@@ -1,5 +1,5 @@
 before_script:
-	- apt-get install jq
+- apt-get install jq
 job:
     script:
         - ./.test.sh
