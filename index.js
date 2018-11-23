@@ -82,32 +82,27 @@ app.post('/delUser', function (req, res) {
 
 app.post('/editUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-    if (typeof req.body.token !== 'undefined' && req.body.token !== "") {
-        MongoClient.connect(url, function (err, client) {
-            const db = client.db(dbName);
-            var query = {
-                token: req.body.token
-            };
-            var update = {
-                $set: {
-                    firstname: req.body.firstname,
-                    lastname: req.body.lastname,
-                    dateOfBirth: new Date(req.body.dateOfBirth)
-                }
-            };
-            db.collection('users').updateOne(query, update, function (err, result) {
-                if (result) {
-                    res.send(JSON.stringify({"state": "success"}));
-                } else {
-                    res.send(JSON.stringify({"state": "error"}));
-                }
-                client.close();
-            });
-
+    MongoClient.connect(url, function (err, client) {
+        const db = client.db(dbName);
+        var query = {
+            token: req.body.token
+        };
+        var update = {
+            $set: {
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                dateOfBirth: new Date(req.body.dateOfBirth)
+            }
+        };
+        db.collection('users').findOneAndUpdate(query, update, function (err, result) {
+            if (result.value != null) {
+                res.send(JSON.stringify({"state": "success"}));
+            } else {
+                res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
+            }
+            client.close();
         });
-    } else {
-        res.send(JSON.stringify({"state" : "error", "message" : "bad token"}));
-    }
+    });
 });
 
 app.post('/changePassword', function (req, res) {
@@ -131,7 +126,7 @@ app.post('/changePassword', function (req, res) {
                 res.send(JSON.stringify({"state": "success"}));
 
             } else {
-                res.send(JSON.stringify({"state": "error"}));
+                res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
             }
             client.close();
         });
