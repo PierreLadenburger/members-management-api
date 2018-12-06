@@ -1,0 +1,77 @@
+{
+   "swagger": "2.0",
+   "info": {
+     "title": "API USERS",
+     "description": "base_url: https://api.homedoc.fr",
+     "version": "1.0"
+   },
+   "produces": ["application/json"],
+  "consumes": ["application/json"],
+  "paths": {
+     "/createUser": {
+       "post": {
+         "x-swagger-router-controller": "home",
+         "operationId": "index",
+         "description": "[Login 123](https://www.google.com)",
+         "parameters": [{
+           "name": "createUser",
+           "in": "body",
+           "required": true,
+           "schema": {
+             "$ref": "#/definitions/createUser"
+           }
+         }
+         ],
+         "responses": {}
+       }
+     },
+     "/login": {
+		"post": {
+		  "x-swagger-router-controller": "bar",
+		  "operationId": "impossible",
+		  "description": "",
+		  "responses": {},
+		  "parameters": [{
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/login"
+            },
+            "name": "login"
+          }
+          ]
+		}
+	  }
+   },
+  "definitions": {
+    "login" : {
+      "properties" : {
+        "email" : {
+          "type" : "string"
+        },
+        "password" : {
+          "type" : "string"
+        }
+      }
+    },
+    "createUser" : {
+      "properties" : {
+        "email" : {
+          "type" : "string"
+        },
+        "password" : {
+          "type" : "string"
+        },
+        "firstname" : {
+          "type" : "string"
+        },
+        "lastname" : {
+          "type" : "string"
+        },
+        "dateOfBirth" : {
+          "type" : "string"
+        }
+      }
+    }
+  }
+}

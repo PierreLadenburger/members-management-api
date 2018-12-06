@@ -7,10 +7,13 @@ var bodyParser = require('body-parser');
 var md5 = require('md5');
 var app = express();
 var dateTime = require('node-datetime');
+var swaggerUi = require('swagger-ui-express');
+var swaggerDocument = require('./swagger.json');
 
 const {ObjectId} = require('mongodb'); // or ObjectID
 
 app.use(bodyParser.json());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const url='mongodb://homedocRW:homedocRW@51.38.234.54:27017/homedoc';
 const dbName = 'homedoc';
