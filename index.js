@@ -42,7 +42,6 @@ app.post('/createUser', function (req, res) {
                 lastname: req.body.lastname,
                 dateOfBirth: new Date(req.body.dateOfBirth),
                 creationDate: new Date(),
-                profile : "patient",
                 firstConnection : true
             };
             var checkEmail = {
@@ -262,6 +261,78 @@ app.post('/usersList', function (req, res) {
             client.close();
         });
     })
+});
+
+app.post('/loginDoctor', function (req, res) {
+    MongoClient.connect(url, function(err, client) {
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+
+        } else {
+            const db = client.db(dbName);
+            var query = {
+                email: req.body.email,
+                password: md5(req.body.password)
+            };
+
+            var dt = dateTime.create();
+            var formatted = dt.format('d-m-Y H:M:S');
+            var token = req.body.email + '&'+ formatted;
+            var update = {
+                $set : { "token" : md5(token)
+                }
+            };
+            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            db.collection('doctors').findOneAndUpdate(query, update,  function(err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success", "token": md5(token)}));
+
+                } else {
+                    res.send(JSON.stringify({"state": "error", "message" : "bad login"}));
+                }
+                client.close();
+            });
+        }
+    })
+});
+
+app.post('/createDoctor', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+    MongoClient.connect(url, function (err, client) {
+        const db = client.db(dbName);
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+        } else {
+            var dt = dateTime.create();
+            var formatted = dt.format('d-m-Y H:M:S');
+            var query = {
+                email: req.body.email,
+                password: md5(req.body.password),
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                creationDate: new Date()
+            };
+            var checkEmail = {
+                email: req.body.email
+            };
+            db.collection('doctors').findOne(checkEmail, function (err, result) {
+                if (result) {
+                    res.send(JSON.stringify({"state": "error", "message": "email already used"}));
+                }
+                else {
+                    db.collection('doctors').insertOne(query, function (err, result) {
+                        if (result) {
+                            res.send(JSON.stringify({"state": "success"}));
+                        } else {
+                            res.send(JSON.stringify({"state": "error", "message": "insertion failed"}));
+                        }
+                        client.close();
+                    });
+                }
+                client.close();
+            });
+        }
+    });
 });
 
 app.listen(8080);
