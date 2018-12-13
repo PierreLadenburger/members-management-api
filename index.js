@@ -37,6 +37,8 @@ app.post('/createUser', function (req, res) {
                 lastname: req.body.lastname,
                 dateOfBirth: new Date(req.body.dateOfBirth),
                 creationDate: new Date(),
+                profile : "patient",
+                firstConnection : true
             };
             var checkEmail = {
                 email: req.body.email
@@ -94,7 +96,14 @@ app.post('/editUser', function (req, res) {
             $set: {
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
-                dateOfBirth: new Date(req.body.dateOfBirth)
+                dateOfBirth: new Date(req.body.dateOfBirth),
+                height: req.body.height,
+                weight: req.body.weight,
+                medicalHistory: req.body.medicalHistory,
+                gender: req.body.gender,
+                allergies: req.body.allergies,
+                city : req.body.city,
+                firstConnection : req.body.firstConnection
             }
         };
         db.collection('users').findOneAndUpdate(query, update, function (err, result) {
@@ -146,7 +155,7 @@ app.post('/getUser', function (req, res) {
                 token: req.body.token
             };
             db.collection('users').findOne(query, function (err, result) {
-                if (result) {
+                if (result.value != null) {
                     res.send(JSON.stringify({"userData" : result, "state" : "success"}));
 
                 } else {

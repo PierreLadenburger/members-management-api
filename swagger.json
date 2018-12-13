@@ -10,11 +10,11 @@
   "paths": {
      "/createUser": {
        "post": {
-         "x-swagger-router-controller": "home",
-         "operationId": "index",
+         "x-swagger-router-controller": "bar",
+         "operationId": "1",
          "description": "[Login 123](https://www.google.com)",
          "parameters": [{
-           "name": "createUser",
+           "name": "body",
            "in": "body",
            "required": true,
            "schema": {
@@ -22,13 +22,17 @@
            }
          }
          ],
-         "responses": {}
+         "responses": {
+           "200" : {
+             "description": "Success"
+           }
+         }
        }
      },
      "/login": {
 		"post": {
 		  "x-swagger-router-controller": "bar",
-		  "operationId": "impossible",
+		  "operationId": "2",
 		  "description": "",
 		  "responses": {},
 		  "parameters": [{
@@ -37,11 +41,61 @@
             "schema": {
               "$ref": "#/definitions/login"
             },
-            "name": "login"
+            "name": "body"
           }
           ]
 		}
-	  }
+	  },
+    "/editUser": {
+      "post": {
+        "x-swagger-router-controller": "bar",
+        "operationId": "3",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/editUser"
+          },
+          "name": "body"
+        }
+        ]
+      }
+    },
+    "/logout": {
+      "post": {
+        "x-swagger-router-controller": "bar",
+        "operationId": "4",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/logout"
+          },
+          "name": "body"
+        }
+        ]
+      }
+    },
+    "/usersList": {
+      "post": {
+        "x-swagger-router-controller": "bar",
+        "operationId": "5",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": false,
+          "schema": {
+          },
+          "name": "body"
+        }
+        ]
+      }
+    }
    },
   "definitions": {
     "login" : {
@@ -69,6 +123,49 @@
           "type" : "string"
         },
         "dateOfBirth" : {
+          "type" : "string"
+        }
+      }
+    },
+    "editUser" : {
+      "properties" : {
+        "firstname" : {
+          "type" : "string"
+        },
+        "lastname" : {
+          "type" : "string"
+        },
+        "dateOfBirth" : {
+          "type" : "string"
+        },
+        "height" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "weight" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "medicalHistory" : {
+          "type" : "string"
+        },
+        "gender" : {
+          "type" : "string"
+        },
+        "allergies" : {
+          "type" : "string"
+        },
+        "city" : {
+          "type" : "string"
+        },
+        "token" : {
+          "type" : "string"
+        }
+      }
+    },
+    "logout" : {
+      "properties" : {
+        "token" : {
           "type" : "string"
         }
       }
