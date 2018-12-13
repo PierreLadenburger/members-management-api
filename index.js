@@ -18,16 +18,21 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 const url='mongodb://homedocRW:homedocRW@51.38.234.54:27017/homedoc';
 const dbName = 'homedoc';
 
+function isEmptyObject(obj) {
+    return !Object.keys(obj).length;
+}
+
 app.get('/', function (req, res) {
     res.send("OK");
 });
 
-// Insert a user in db (email, password, firstname, lastname, dateOfBirth)
 app.post('/createUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-    if (req.body.email !== '') {
-        MongoClient.connect(url, function (err, client) {
-            const db = client.db(dbName);
+    MongoClient.connect(url, function (err, client) {
+        const db = client.db(dbName);
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+        } else {
             var dt = dateTime.create();
             var formatted = dt.format('d-m-Y H:M:S');
             var query = {
@@ -59,28 +64,31 @@ app.post('/createUser', function (req, res) {
                 }
                 client.close();
             });
-        });
-    } else  {
-        res.send(JSON.stringify({"state": "error", "message": "bad email"}));
-    }
+        }
+    });
 });
 
 app.post('/delUser', function (req, res) {
     MongoClient.connect(url, function(err, client) {
         const db = client.db(dbName);
-        var query = {
-            token: req.body.token
-        };
-        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-        db.collection('users').findOneAndDelete(query, function(err, result) {
-            if (result.value != null) {
-                res.send(JSON.stringify({"state": "success"}));
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+        } else {
+            var query = {
+                token: req.body.token
+            };
+            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            db.collection('users').findOneAndDelete(query, function(err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success"}));
 
-            } else {
-                res.send(JSON.stringify({"state" : "error", "message" : "bad token"}));
-            }
-            client.close();
-        });
+                } else {
+                    res.send(JSON.stringify({"state" : "error", "message" : "bad token"}));
+                }
+                client.close();
+            });
+        }
+
     })
 });
 
@@ -88,136 +96,155 @@ app.post('/delUser', function (req, res) {
 app.post('/editUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
     MongoClient.connect(url, function (err, client) {
-        const db = client.db(dbName);
-        var query = {
-            token: req.body.token
-        };
-        var update = {
-            $set: {
-                firstname: req.body.firstname,
-                lastname: req.body.lastname,
-                dateOfBirth: new Date(req.body.dateOfBirth),
-                height: req.body.height,
-                weight: req.body.weight,
-                medicalHistory: req.body.medicalHistory,
-                gender: req.body.gender,
-                allergies: req.body.allergies,
-                city : req.body.city,
-                firstConnection : req.body.firstConnection
-            }
-        };
-        db.collection('users').findOneAndUpdate(query, update, function (err, result) {
-            if (result.value != null) {
-                res.send(JSON.stringify({"state": "success"}));
-            } else {
-                res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
-            }
-            client.close();
-        });
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+        } else {
+            const db = client.db(dbName);
+            var query = {
+                token: req.body.token
+            };
+            var update = {
+                $set: {
+                    firstname: req.body.firstname,
+                    lastname: req.body.lastname,
+                    dateOfBirth: new Date(req.body.dateOfBirth),
+                    height: req.body.height,
+                    weight: req.body.weight,
+                    medicalHistory: req.body.medicalHistory,
+                    gender: req.body.gender,
+                    allergies: req.body.allergies,
+                    city : req.body.city,
+                    firstConnection : req.body.firstConnection
+                }
+            };
+            db.collection('users').findOneAndUpdate(query, update, function (err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success"}));
+                } else {
+                    res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
+                }
+                client.close();
+            });
+        }
     });
 });
 
 app.post('/changePassword', function (req, res) {
     MongoClient.connect(url, function(err, client) {
         const db = client.db(dbName);
-        var query = {
-            token: req.body.token,
-            password: md5(req.body.oldPassword)
-        };
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+        } else {
+            var query = {
+                token: req.body.token,
+                password: md5(req.body.oldPassword)
+            };
 
-        var dt = dateTime.create();
-        var formatted = dt.format('d-m-Y H:M:S');
-        var token = req.body.email + '&'+ formatted;
-        var update = {
-            $set : { "password" : md5(req.body.newPassword)
-            }
-        };
-        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-        db.collection('users').findOneAndUpdate(query, update,  function(err, result) {
-            if (result.value != null) {
-                res.send(JSON.stringify({"state": "success"}));
+            var dt = dateTime.create();
+            var formatted = dt.format('d-m-Y H:M:S');
+            var token = req.body.email + '&'+ formatted;
+            var update = {
+                $set : { "password" : md5(req.body.newPassword)
+                }
+            };
+            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            db.collection('users').findOneAndUpdate(query, update,  function(err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success"}));
 
-            } else {
-                res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
-            }
-            client.close();
-        });
+                } else {
+                    res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
+                }
+                client.close();
+            });
+        }
     })
 });
 
 app.post('/getUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-    if (req.body.token !== '') {
-
         MongoClient.connect(url, function (err, client) {
             const db = client.db(dbName);
-            var query = {
-                token: req.body.token
-            };
-            db.collection('users').findOne(query, function (err, result) {
-                if (result.value != null) {
-                    res.send(JSON.stringify({"userData" : result, "state" : "success"}));
+            if (isEmptyObject(req.body)) {
+                res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+            } else {
+                var query = {
+                    token: req.body.token
+                };
+                db.collection('users').findOne(query, function (err, result) {
 
-                } else {
-                    res.send(JSON.stringify({"state": "error", "message": "bad token"}));
-                }
-                client.close();
-            });
+                    if (result != null) {
+                        res.send(JSON.stringify({"userData" : result, "state" : "success"}));
+
+                    } else {
+                        res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+                    }
+                    client.close();
+                });
+            }
+
         })
-    }
-    else {
-        res.send(JSON.stringify({"state": "error", "message": "bad token"}));
-    }
 });
 
 app.post('/login', function (req, res) {
     MongoClient.connect(url, function(err, client) {
-        const db = client.db(dbName);
-        var query = {
-            email: req.body.email,
-            password: md5(req.body.password)
-        };
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
 
-        var dt = dateTime.create();
-        var formatted = dt.format('d-m-Y H:M:S');
-        var token = req.body.email + '&'+ formatted;
-        var update = {
-            $set : { "token" : md5(token)
-            }
-        };
-        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-        db.collection('users').findOneAndUpdate(query, update,  function(err, result) {
-            if (result.value != null) {
-                res.send(JSON.stringify({"token": md5(token), "state": "success"}));
+        } else {
+            const db = client.db(dbName);
+            var query = {
+                email: req.body.email,
+                password: md5(req.body.password)
+            };
 
-            } else {
-                res.send(JSON.stringify({"state": "error"}));
-            }
-            client.close();
-        });
+            var dt = dateTime.create();
+            var formatted = dt.format('d-m-Y H:M:S');
+            var token = req.body.email + '&'+ formatted;
+            var update = {
+                $set : { "token" : md5(token)
+                }
+            };
+            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            db.collection('users').findOneAndUpdate(query, update,  function(err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success", "token": md5(token)}));
+
+                } else {
+                    res.send(JSON.stringify({"state": "error", "message" : "bad login"}));
+                }
+                client.close();
+            });
+        }
     })
 });
 
 app.post('/logout', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
         MongoClient.connect(url, function(err, client) {
-            var query = {
-                token: req.body.token
-            };
-            var updateToken = {
-                $unset : { "token" : ""
-                }
-            };
-            const db = client.db(dbName);
-            db.collection('users').findOneAndUpdate(query, updateToken, function(err, result) {
-                if (result.value != null) {
-                    res.send(JSON.stringify({"state": "success"}));
+            if (isEmptyObject(req.body)) {
+                res.send(JSON.stringify({"state": "error", "message": "bad json"}));
 
-                } else {
-                    res.send(JSON.stringify({"state": "error", "message": "bad token"}));
-                }
-                client.close();
-            });
+            } else {
+                var query = {
+                    token: req.body.token
+                };
+                var updateToken = {
+                    $unset : { "token" : ""
+                    }
+                };
+                const db = client.db(dbName);
+                db.collection('users').findOneAndUpdate(query, updateToken, function(err, result) {
+                    if (result.value != null) {
+                        res.send(JSON.stringify({"state": "success"}));
+
+                    } else {
+                        res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+                    }
+                    client.close();
+                });
+            }
+
         });
 });
 
