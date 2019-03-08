@@ -185,6 +185,7 @@ app.post('/getUser', function (req, res) {
                                         "medicalHistory" : result.medicalHistory,
                                         "city" : result.city,
                                         "gender" : result.gender,
+                                        "conversations" : result.conversations,
                                         "firstConnection" : result.firstConnection,
                                         "token" : result.token};
                         res.send(JSON.stringify({"userData" : userData, "state" : "success"}));
