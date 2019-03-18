@@ -1,0 +1,15 @@
+{
+  "name": "users-api",
+  "version": "1.0.0",
+  "description": "API de gestion des utilisateurs.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@vps179077.vps.ovh.ca:ladenb_p/users-api.git"
+  },
+  "author": "",
+  "license": "ISC"
+}
