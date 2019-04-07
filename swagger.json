@@ -1,7 +1,7 @@
 {
    "swagger": "2.0",
    "info": {
-     "title": "API USERS",
+     "title": "API - User and Doctor management",
      "description": "base_url: https://api.homedoc.fr",
      "version": "1.0"
    },
@@ -10,6 +10,7 @@
   "paths": {
      "/createUser": {
        "post": {
+         "tags": ["user"],
          "x-swagger-router-controller": "bar",
          "operationId": "1",
          "description": "[Login 123](https://www.google.com)",
@@ -31,7 +32,8 @@
      },
      "/login": {
 		"post": {
-		  "x-swagger-router-controller": "bar",
+          "tags": ["user"],
+          "x-swagger-router-controller": "bar",
 		  "operationId": "2",
 		  "description": "",
 		  "responses": {},
@@ -48,6 +50,7 @@
 	  },
     "/editUser": {
       "post": {
+        "tags": ["user"],
         "x-swagger-router-controller": "bar",
         "operationId": "3",
         "description": "",
@@ -63,10 +66,29 @@
         ]
       }
     },
-    "/logout": {
+    "/getUser": {
       "post": {
+        "tags": ["user"],
         "x-swagger-router-controller": "bar",
         "operationId": "4",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/getUser"
+          },
+          "name": "body"
+        }
+        ]
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": ["user"],
+        "x-swagger-router-controller": "bar",
+        "operationId": "5",
         "description": "",
         "responses": {},
         "parameters": [{
@@ -82,8 +104,9 @@
     },
     "/usersList": {
       "post": {
+        "tags": ["user"],
         "x-swagger-router-controller": "bar",
-        "operationId": "5",
+        "operationId": "6",
         "description": "",
         "responses": {},
         "parameters": [{
@@ -95,8 +118,102 @@
         }
         ]
       }
+    },
+    "/changePassword": {
+      "post": {
+        "tags": ["user"],
+        "x-swagger-router-controller": "bar",
+        "operationId": "7",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/changePassword"
+          },
+          "name": "body"
+        }
+        ]
+      }
+    },
+    "/loginDoctor": {
+      "post": {
+        "tags": ["doctor"],
+        "x-swagger-router-controller": "bar",
+        "operationId": "8",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/login"
+          },
+          "name": "body"
+        }
+        ]
+      }
+    },
+    "/logoutDoctor": {
+      "post": {
+        "tags": ["doctor"],
+        "x-swagger-router-controller": "bar",
+        "operationId": "9",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/logout"
+          },
+          "name": "body"
+        }
+        ]
+      }
+    },
+    "/createDoctor": {
+      "post": {
+        "tags": ["doctor"],
+        "x-swagger-router-controller": "bar",
+        "operationId": "10",
+        "description": "[Login 123](https://www.google.com)",
+        "parameters": [{
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/createUser"
+          }
+        }
+        ],
+        "responses": {
+          "200" : {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/getDoctor": {
+      "post": {
+        "tags": ["doctor"],
+        "x-swagger-router-controller": "bar",
+        "operationId": "11",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/getUser"
+          },
+          "name": "body"
+        }
+        ]
+      }
     }
-   },
+  },
   "definitions": {
     "login" : {
       "properties" : {
@@ -147,13 +264,19 @@
           "format" : "double"
         },
         "medicalHistory" : {
-          "type" : "string"
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
         },
         "gender" : {
           "type" : "string"
         },
         "allergies" : {
-          "type" : "string"
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
         },
         "city" : {
           "type" : "string"
@@ -166,6 +289,26 @@
     "logout" : {
       "properties" : {
         "token" : {
+          "type" : "string"
+        }
+      }
+    },
+    "getUser" : {
+      "properties" : {
+        "token" : {
+          "type" : "string"
+        }
+      }
+    },
+    "changePassword" : {
+      "properties" : {
+        "token" : {
+          "type" : "string"
+        },
+        "oldPassword" : {
+          "type" : "string"
+        },
+        "newPassword" : {
           "type" : "string"
         }
       }

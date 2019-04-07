@@ -410,27 +410,23 @@ app.post('/getDoctor', function (req, res) {
     })
 });
 
-app.post('/getFirstName', function (req, res) {
+app.get('/getDoctor/:id', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
     MongoClient.connect(url, function (err, client) {
         const db = client.db(dbName);
-        if (isEmptyObject(req.body)) {
-            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
-        } else {
-            var query = {
-                _id : ObjectId(req.body.id)
-            };
-            db.collection('users').findOne(query, function (err, result) {
-                if (result != null) {
-                    res.send(JSON.stringify({"firstname" : result.firstname, "state" : "success"}));
+        var query = {
+            _id: ObjectId(req.params.id)
+        };
+        db.collection('doctors').findOne(query, function (err, result) {
 
-                } else {
-                    res.send(JSON.stringify({"state": "error", "message": "bad token"}));
-                }
-                client.close();
-            });
-        }
+            if (result != null) {
+                res.send(JSON.stringify({"doctorData" : result, "state" : "success"}));
 
+            } else {
+                res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+            }
+            client.close();
+        });
     })
 });
 
@@ -447,6 +443,68 @@ app.get('/getConnectedDoctors', function (req, res) {
             }
             client.close();
         });
+    })
+});
+
+app.post('/editDoctor', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+    MongoClient.connect(url, function (err, client) {
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+        } else {
+            const db = client.db(dbName);
+            var query = {
+                token: req.body.token
+            };
+            var update = {
+                $set: {
+                    firstname: req.body.firstname,
+                    lastname: req.body.lastname,
+                    dateOfBirth: new Date(req.body.dateOfBirth),
+                    city : req.body.city,
+                }
+            };
+            db.collection('doctors').findOneAndUpdate(query, update, function (err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success"}));
+                } else {
+                    res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
+                }
+                client.close();
+            });
+        }
+    });
+});
+
+app.post('/changePasswordDoctor', function (req, res) {
+    MongoClient.connect(url, function(err, client) {
+        const db = client.db(dbName);
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+        } else {
+            var query = {
+                token: req.body.token,
+                password: md5(req.body.oldPassword)
+            };
+
+            var dt = dateTime.create();
+            var formatted = dt.format('d-m-Y H:M:S');
+            var token = req.body.email + '&'+ formatted;
+            var update = {
+                $set : { "password" : md5(req.body.newPassword)
+                }
+            };
+            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            db.collection('doctors').findOneAndUpdate(query, update,  function(err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success"}));
+
+                } else {
+                    res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
+                }
+                client.close();
+            });
+        }
     })
 });
 
