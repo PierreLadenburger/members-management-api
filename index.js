@@ -360,7 +360,8 @@ app.post('/createDoctor', function (req, res) {
                 password: md5(req.body.password),
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
-                creationDate: new Date()
+                creationDate: new Date(),
+                dateOfBirth: new Date(req.body.dateOfBirth)
             };
             var checkEmail = {
                 email: req.body.email

@@ -212,6 +212,42 @@
         }
         ]
       }
+    },
+    "/editDoctor": {
+      "post": {
+        "tags": ["doctor"],
+        "x-swagger-router-controller": "bar",
+        "operationId": "12",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/editDoctor"
+          },
+          "name": "body"
+        }
+        ]
+      }
+    },
+    "/changePasswordDoctor": {
+      "post": {
+        "tags": ["doctor"],
+        "x-swagger-router-controller": "bar",
+        "operationId": "13",
+        "description": "",
+        "responses": {},
+        "parameters": [{
+          "in": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/changePassword"
+          },
+          "name": "body"
+        }
+        ]
+      }
     }
   },
   "definitions": {
@@ -309,6 +345,25 @@
           "type" : "string"
         },
         "newPassword" : {
+          "type" : "string"
+        }
+      }
+    },
+    "editDoctor" : {
+      "properties" : {
+        "firstname" : {
+          "type" : "string"
+        },
+        "lastname" : {
+          "type" : "string"
+        },
+        "dateOfBirth" : {
+          "type" : "string"
+        },
+        "city" : {
+          "type" : "string"
+        },
+        "token" : {
           "type" : "string"
         }
       }
