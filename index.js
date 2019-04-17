@@ -40,7 +40,7 @@ app.post('/createUser', function (req, res) {
                 password: md5(req.body.password),
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
-                dateOfBirth: new Date(req.body.dateOfBirth),
+                dateOfBirth: req.body.dateOfBirth,
                 creationDate: new Date(),
                 firstConnection : true
             };
@@ -106,7 +106,7 @@ app.post('/editUser', function (req, res) {
                 $set: {
                     firstname: req.body.firstname,
                     lastname: req.body.lastname,
-                    dateOfBirth: new Date(req.body.dateOfBirth),
+                    dateOfBirth: req.body.dateOfBirth,
                     height: req.body.height,
                     weight: req.body.weight,
                     medicalHistory: req.body.medicalHistory,
@@ -173,24 +173,7 @@ app.post('/getUser', function (req, res) {
                 db.collection('users').findOne(query, function (err, result) {
 
                     if (result != null) {
-                        var date = new Date(result.dateOfBirth);
-                        var userData = {
-                                        "id" : result._id,
-                                        "email" : result.email,
-                                        "password" : result.password,
-                                        "firstname" : result.firstname,
-                                        "lastname" : result.lastname,
-                                        "dateOfBirth" : date.toISOString().substring(0, 10),
-                                        "weight" : result.weight,
-                                        "height" : result.height,
-                                        "allergies" : result.allergies,
-                                        "medicalHistory" : result.medicalHistory,
-                                        "city" : result.city,
-                                        "gender" : result.gender,
-                                        "conversations" : result.conversations,
-                                        "firstConnection" : result.firstConnection,
-                                        "token" : result.token};
-                        res.send(JSON.stringify({"userData" : userData, "state" : "success"}));
+                        res.send(JSON.stringify({"userData" : result, "state" : "success"}));
 
                     } else {
                         res.send(JSON.stringify({"state": "error", "message": "bad token"}));
@@ -361,7 +344,7 @@ app.post('/createDoctor', function (req, res) {
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
                 creationDate: new Date(),
-                dateOfBirth: new Date(req.body.dateOfBirth)
+                dateOfBirth: req.body.dateOfBirth
             };
             var checkEmail = {
                 email: req.body.email
@@ -461,7 +444,7 @@ app.post('/editDoctor', function (req, res) {
                 $set: {
                     firstname: req.body.firstname,
                     lastname: req.body.lastname,
-                    dateOfBirth: new Date(req.body.dateOfBirth),
+                    dateOfBirth: req.body.dateOfBirth,
                     city : req.body.city,
                 }
             };
