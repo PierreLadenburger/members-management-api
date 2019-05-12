@@ -414,6 +414,26 @@ app.get('/getDoctor/:id', function (req, res) {
     })
 });
 
+app.get('/getUser/:id', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+    MongoClient.connect(url, function (err, client) {
+        const db = client.db(dbName);
+        var query = {
+            _id: ObjectId(req.params.id)
+        };
+        db.collection('users').findOne(query, function (err, result) {
+
+            if (result != null) {
+                res.send(JSON.stringify({"userData" : result, "state" : "success"}));
+
+            } else {
+                res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+            }
+            client.close();
+        });
+    })
+});
+
 app.get('/getConnectedDoctors', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
     MongoClient.connect(url, function (err, client) {
