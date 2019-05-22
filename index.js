@@ -367,7 +367,8 @@ app.post('/createDoctor', function (req, res) {
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
                 creationDate: new Date(),
-                dateOfBirth: req.body.dateOfBirth
+                dateOfBirth: req.body.dateOfBirth,
+                firstConnection : true
             };
             var checkEmail = {
                 email: req.body.email
@@ -489,6 +490,7 @@ app.post('/editDoctor', function (req, res) {
                     lastname: req.body.lastname,
                     dateOfBirth: req.body.dateOfBirth,
                     city : req.body.city,
+                    firstConnection : req.body.firstConnection
                 }
             };
             db.collection('doctors').findOneAndUpdate(query, update, function (err, result) {
