@@ -395,7 +395,8 @@ app.post('/createDoctor', function (req, res) {
                 creationDate: new Date(),
                 isValid : false,
                 speciality : req.body.speciality,
-                firstConnection : true
+                firstConnection : true,
+                accessCode: Math.floor(1000 + Math.random() * 9000)
             };
             var checkEmail = {
                 email: req.body.email
