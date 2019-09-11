@@ -97,30 +97,6 @@ app.post('/delUser', function (req, res) {
     })
 });
 
-app.post('/delDoctor', function (req, res) {
-    MongoClient.connect(url, function(err, client) {
-        const db = client.db(dbName);
-        if (isEmptyObject(req.body)) {
-            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
-        } else {
-            var query = {
-                token: req.body.token
-            };
-            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-            db.collection('doctors').findOneAndDelete(query, function(err, result) {
-                if (result.value != null) {
-                    res.send(JSON.stringify({"state": "success"}));
-
-                } else {
-                    res.send(JSON.stringify({"state" : "error", "message" : "bad token"}));
-                }
-                client.close();
-            });
-        }
-
-    })
-});
-
 app.post('/editUser', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
     MongoClient.connect(url, function (err, client) {
@@ -239,6 +215,26 @@ app.post('/getUser', function (req, res) {
         })
 });
 
+app.get('/getUser/:id', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+    MongoClient.connect(url, function (err, client) {
+        const db = client.db(dbName);
+        var query = {
+            _id: ObjectId(req.params.id)
+        };
+        db.collection('users').findOne(query, function (err, result) {
+
+            if (result != null) {
+                res.send(JSON.stringify({"userData" : result, "state" : "success"}));
+
+            } else {
+                res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+            }
+            client.close();
+        });
+    })
+});
+
 app.post('/login', function (req, res) {
     MongoClient.connect(url, function(err, client) {
         if (isEmptyObject(req.body)) {
@@ -261,6 +257,7 @@ app.post('/login', function (req, res) {
                     var update = {
                         token : md5(token),
                         user_id : ObjectId(result._id),
+                        device_id : req.body.device_id,
                         date: new Date()
                     };
                     db.collection('users_token').insertOne(update, function (err, result) {
@@ -393,11 +390,11 @@ app.post('/createDoctor', function (req, res) {
             var formatted = dt.format('d-m-Y H:M:S');
             var query = {
                 email: req.body.email,
-                password: md5(req.body.password),
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
                 creationDate: new Date(),
-                dateOfBirth: req.body.dateOfBirth,
+                isValid : false,
+                speciality : req.body.speciality,
                 firstConnection : true
             };
             var checkEmail = {
@@ -459,26 +456,6 @@ app.get('/getDoctor/:id', function (req, res) {
 
             if (result != null) {
                 res.send(JSON.stringify({"doctorData" : result, "state" : "success"}));
-
-            } else {
-                res.send(JSON.stringify({"state": "error", "message": "bad token"}));
-            }
-            client.close();
-        });
-    })
-});
-
-app.get('/getUser/:id', function (req, res) {
-    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-    MongoClient.connect(url, function (err, client) {
-        const db = client.db(dbName);
-        var query = {
-            _id: ObjectId(req.params.id)
-        };
-        db.collection('users').findOne(query, function (err, result) {
-
-            if (result != null) {
-                res.send(JSON.stringify({"userData" : result, "state" : "success"}));
 
             } else {
                 res.send(JSON.stringify({"state": "error", "message": "bad token"}));
@@ -567,4 +544,27 @@ app.post('/changePasswordDoctor', function (req, res) {
     })
 });
 
+app.post('/delDoctor', function (req, res) {
+    MongoClient.connect(url, function(err, client) {
+        const db = client.db(dbName);
+        if (isEmptyObject(req.body)) {
+            res.send(JSON.stringify({"state": "error", "message": "bad json"}));
+        } else {
+            var query = {
+                token: req.body.token
+            };
+            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            db.collection('doctors').findOneAndDelete(query, function(err, result) {
+                if (result.value != null) {
+                    res.send(JSON.stringify({"state": "success"}));
+
+                } else {
+                    res.send(JSON.stringify({"state" : "error", "message" : "bad token"}));
+                }
+                client.close();
+            });
+        }
+
+    })
+});
 app.listen(8080);
