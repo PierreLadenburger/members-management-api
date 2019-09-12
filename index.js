@@ -107,10 +107,15 @@ app.post('/editUser', function (req, res) {
             var query = {
                 token: req.body.token
             };
-            db.collection('users_token').findOne(query, function (err, result) {
-                if (result) {
+            var update = {
+                $set: {
+                    device_id: req.body.device_id
+                }
+            };
+            db.collection('users_token').findOneAndUpdate(query, update, {returnOriginal:false} ,function (err, result) {
+                if (result.value) {
                     var query = {
-                        _id : ObjectId(result.user_id)
+                        _id : ObjectId(result.value.user_id)
                     };
                     var update = {
                         $set: {
@@ -297,7 +302,7 @@ app.post('/logout', function (req, res) {
         });
 });
 
-app.post('/usersList', function (req, res) {
+app.get('/usersList', function (req, res) {
     MongoClient.connect(url, function(err, client) {
         const db = client.db(dbName);
         res.setHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -311,6 +316,22 @@ app.post('/usersList', function (req, res) {
             client.close();
         });
     })
+});
+
+app.get('/doctorsList', function (req, res) {
+    MongoClient.connect(url, function(err, client) {
+        const db = client.db(dbName);
+        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+        db.collection('doctors').find({}).toArray(function(err, result) {
+            if (result) {
+                res.send(JSON.stringify({"doctors": result, "state": "success"}));
+
+            } else {
+                res.send(JSON.stringify({"state": "error"}));
+            }
+            client.close();
+        });
+    });
 });
 
 app.post('/loginDoctor', function (req, res) {
@@ -395,6 +416,7 @@ app.post('/createDoctor', function (req, res) {
                 creationDate: new Date(),
                 isValid : false,
                 speciality : req.body.speciality,
+                rpps: req.body.rpps,
                 firstConnection : true,
                 accessCode: Math.floor(1000 + Math.random() * 9000)
             };
