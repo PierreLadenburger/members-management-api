@@ -154,7 +154,7 @@ app.post('/changePassword', function (req, res) {
             res.send(JSON.stringify({"state": "error", "message": "bad json"}));
         } else {
             var query = {
-                token: req.body.token,
+                token: req.body.token
             };
             db.collection('users_token').findOne(query, function (err, result) {
                 if (result) {
@@ -173,7 +173,8 @@ app.post('/changePassword', function (req, res) {
                     db.collection('users').findOneAndUpdate(query, update,  function(err, result) {
                         if (result.value != null) {
                             res.send(JSON.stringify({"state": "success"}));
-
+                        } else {
+                            res.send(JSON.stringify({"state": "error", "message" : "bad old password"}));
                         }
                         client.close();
                     });
@@ -216,7 +217,6 @@ app.post('/getUser', function (req, res) {
                     client.close();
                 });
             }
-
         })
 });
 
@@ -351,14 +351,22 @@ app.post('/loginDoctor', function (req, res) {
             var token = req.body.email + '&'+ formatted;
             var update = {
                 $set : {
-                    "token" : md5(token),
-                    "connected" : true
+                    connected : true
                 }
             };
             res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-            db.collection('doctors').findOneAndUpdate(query, update,  function(err, result) {
+            db.collection('doctors').findOneAndUpdate(query, update, {returnOriginal:false}, function(err, result) {
                 if (result.value != null) {
-                    res.send(JSON.stringify({"state": "success", "token": md5(token)}));
+                    var update = {
+                        token : md5(token),
+                        user_id : ObjectId(result.value._id),
+                        device_id : req.body.device_id,
+                        date: new Date()
+                    };
+                    db.collection('users_token').insertOne(update, function (err, result) {
+                        res.send(JSON.stringify({"state": "success", "token": md5(token)}));
+                        client.close();
+                    });
 
                 } else {
                     res.send(JSON.stringify({"state": "error", "message" : "bad login"}));
@@ -379,16 +387,22 @@ app.post('/logoutDoctor', function (req, res) {
             var query = {
                 token: req.body.token
             };
-            var updateToken = {
-                $unset : {
-                    "token" : "",
-                    "connected" : false
-                }
-            };
+
             const db = client.db(dbName);
-            db.collection('doctors').findOneAndUpdate(query, updateToken, function(err, result) {
+            db.collection('users_token').findOneAndDelete(query, {returnOriginal:true}, function(err, result) {
                 if (result.value != null) {
-                    res.send(JSON.stringify({"state": "success"}));
+                    var updateCo = {
+                        $unset : {
+                            "connected" : false
+                        }
+                    };
+                    var query = {
+                        _id: ObjectId(result.value.user_id)
+                    };
+                    db.collection('doctors').findOneAndUpdate(query, updateCo, function (err, result) {
+                        res.send(JSON.stringify({"state": "success"}));
+                        client.close();
+                    });
 
                 } else {
                     res.send(JSON.stringify({"state": "error", "message": "bad token"}));
@@ -443,6 +457,30 @@ app.post('/createDoctor', function (req, res) {
     });
 });
 
+app.post('/validDoctor', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+    MongoClient.connect(url, function (err, client) {
+        const db = client.db(dbName);
+        var query = {
+            accessCode: req.body.accessCode
+        };
+        var update = {
+            $set : {
+                accessCode : null,
+                isValid : true
+            }
+        };
+        db.collection('doctors').findOneAndUpdate(query, update, function (err, result) {
+            if (result.value != null) {
+                res.send(JSON.stringify({"state": "success"}));
+            } else {
+                res.send(JSON.stringify({"state": "error", "message" : "bad accessCode"}));
+            }
+            client.close();
+        });
+    });
+});
+
 app.post('/getDoctor', function (req, res) {
     res.setHeader('Content-Type', 'application/json; charset=UTF-8');
     MongoClient.connect(url, function (err, client) {
@@ -453,18 +491,24 @@ app.post('/getDoctor', function (req, res) {
             var query = {
                 token: req.body.token
             };
-            db.collection('doctors').findOne(query, function (err, result) {
+            db.collection('users_token').findOne(query, function (err, result) {
+               if (result) {
+                   var query = {
+                       _id : ObjectId(result.user_id)
+                   };
+                   db.collection('doctors').findOne(query, function (err, result) {
+                       if (result != null) {
+                           res.send(JSON.stringify({"doctorData" : result, "state" : "success"}));
 
-                if (result != null) {
-                    res.send(JSON.stringify({"doctorData" : result, "state" : "success"}));
-
-                } else {
-                    res.send(JSON.stringify({"state": "error", "message": "bad token"}));
-                }
-                client.close();
+                       }
+                       client.close();
+                   });
+               } else {
+                   res.send(JSON.stringify({"state": "error", "message": "bad token"}));
+               }
+               client.close();
             });
         }
-
     })
 });
 
@@ -516,21 +560,36 @@ app.post('/editDoctor', function (req, res) {
             };
             var update = {
                 $set: {
-                    firstname: req.body.firstname,
-                    lastname: req.body.lastname,
-                    dateOfBirth: req.body.dateOfBirth,
-                    city : req.body.city,
-                    firstConnection : req.body.firstConnection
+                    device_id: req.body.device_id
                 }
             };
-            db.collection('doctors').findOneAndUpdate(query, update, function (err, result) {
-                if (result.value != null) {
-                    res.send(JSON.stringify({"state": "success"}));
+            db.collection('users_token').findOneAndUpdate(query, update, {returnOriginal:false} ,function (err, result) {
+                if (result.value) {
+                    var query = {
+                        _id: ObjectId(result.value.user_id)
+                    };
+                    var update = {
+                        $set: {
+                            firstname: req.body.firstname,
+                            lastname: req.body.lastname,
+                            dateOfBirth: req.body.dateOfBirth,
+                            city : req.body.city,
+                            firstConnection : req.body.firstConnection
+                        }
+                    };
+                    db.collection('doctors').findOneAndUpdate(query, update, function (err, result) {
+                        if (result.value != null) {
+                            res.send(JSON.stringify({"state": "success"}));
+                        }
+                        client.close();
+                    });
                 } else {
                     res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
                 }
                 client.close();
             });
+
+
         }
     });
 });
@@ -542,32 +601,42 @@ app.post('/changePasswordDoctor', function (req, res) {
             res.send(JSON.stringify({"state": "error", "message": "bad json"}));
         } else {
             var query = {
-                token: req.body.token,
-                password: md5(req.body.oldPassword)
+                token: req.body.token
             };
-
-            var dt = dateTime.create();
-            var formatted = dt.format('d-m-Y H:M:S');
-            var token = req.body.email + '&'+ formatted;
-            var update = {
-                $set : { "password" : md5(req.body.newPassword)
-                }
-            };
-            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-            db.collection('doctors').findOneAndUpdate(query, update,  function(err, result) {
-                if (result.value != null) {
-                    res.send(JSON.stringify({"state": "success"}));
-
+            db.collection('users_token').findOne(query, function (err, result) {
+                if (result) {
+                    var query = {
+                        _id: result.user_id,
+                        password: md5(req.body.oldPassword)
+                    };
+                    var dt = dateTime.create();
+                    var formatted = dt.format('d-m-Y H:M:S');
+                    var token = req.body.email + '&'+ formatted;
+                    var update = {
+                        $set : { "password" : md5(req.body.newPassword)
+                        }
+                    };
+                    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                    db.collection('doctors').findOneAndUpdate(query, update,  function(err, result) {
+                        if (result.value != null) {
+                            res.send(JSON.stringify({"state": "success"}));
+                        } else {
+                            res.send(JSON.stringify({"state": "error", "message" : "bad old password"}));
+                        }
+                        client.close();
+                    });
                 } else {
                     res.send(JSON.stringify({"state": "error", "message" : "bad token"}));
                 }
                 client.close();
             });
+
         }
     })
 });
 
 app.post('/delDoctor', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
     MongoClient.connect(url, function(err, client) {
         const db = client.db(dbName);
         if (isEmptyObject(req.body)) {
@@ -576,18 +645,23 @@ app.post('/delDoctor', function (req, res) {
             var query = {
                 token: req.body.token
             };
-            res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-            db.collection('doctors').findOneAndDelete(query, function(err, result) {
-                if (result.value != null) {
-                    res.send(JSON.stringify({"state": "success"}));
-
-                } else {
+            db.collection('users_token').findOne(query, function (err, result) {
+                if (result) {
+                    var query = {
+                        _id : ObjectId(result.user_id)
+                    };
+                    db.collection('doctors').findOneAndDelete(query, function(err, result) {
+                        if (result.value != null) {
+                            res.send(JSON.stringify({"state": "success"}));
+                        }
+                        client.close();
+                    });
+                }  else {
                     res.send(JSON.stringify({"state" : "error", "message" : "bad token"}));
                 }
                 client.close();
             });
         }
-
     })
 });
 app.listen(8080);
