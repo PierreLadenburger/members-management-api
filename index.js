@@ -444,7 +444,7 @@ app.post('/createDoctor', function (req, res) {
                 else {
                     db.collection('doctors').insertOne(query, function (err, result) {
                         if (result) {
-                            res.send(JSON.stringify({"state": "success"}));
+                            res.send(JSON.stringify({"state": "success", "accessCode" : query.accessCode.toString()}));
                         } else {
                             res.send(JSON.stringify({"state": "error", "message": "insertion failed"}));
                         }
@@ -462,7 +462,7 @@ app.post('/validDoctor', function (req, res) {
     MongoClient.connect(url, function (err, client) {
         const db = client.db(dbName);
         var query = {
-            accessCode: req.body.accessCode
+            accessCode: parseInt(req.body.accessCode)
         };
         var update = {
             $set : {
@@ -470,11 +470,35 @@ app.post('/validDoctor', function (req, res) {
                 isValid : true
             }
         };
+        db.collection('doctors').findOneAndUpdate(query, update,  {returnOriginal:false}, function (err, result) {
+            if (result.value != null) {
+                res.send(JSON.stringify({"state": "success", "doctorId" : result.value._id}));
+            } else {
+                res.send(JSON.stringify({"state": "error", "message" : "bad accessCode"}));
+            }
+            client.close();
+        });
+    });
+});
+
+app.post('/setPasswordDoctor', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+    MongoClient.connect(url, function (err, client) {
+        const db = client.db(dbName);
+        console.log(req.body);
+        var query = {
+              _id : ObjectId(req.body.doctorId)
+        };
+        var update = {
+            $set : {
+                password : md5(req.body.password)
+            }
+        };
         db.collection('doctors').findOneAndUpdate(query, update, function (err, result) {
             if (result.value != null) {
                 res.send(JSON.stringify({"state": "success"}));
             } else {
-                res.send(JSON.stringify({"state": "error", "message" : "bad accessCode"}));
+                res.send(JSON.stringify({"state": "error", "message" : "bad doctorId"}));
             }
             client.close();
         });
