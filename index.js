@@ -462,6 +462,7 @@ app.post('/validDoctor', function (req, res) {
     MongoClient.connect(url, function (err, client) {
         const db = client.db(dbName);
         var query = {
+            email : req.body.email,
             accessCode: parseInt(req.body.accessCode)
         };
         var update = {
