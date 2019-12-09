@@ -429,10 +429,10 @@ app.post('/createDoctor', function (req, res) {
                 lastname: req.body.lastname,
                 creationDate: new Date(),
                 isValid : false,
+                isConfirm : false,
                 speciality : req.body.speciality,
                 rpps: req.body.rpps,
-                firstConnection : true,
-                accessCode: Math.floor(1000 + Math.random() * 9000)
+                firstConnection : true
             };
             var checkEmail = {
                 email: req.body.email
@@ -444,7 +444,7 @@ app.post('/createDoctor', function (req, res) {
                 else {
                     db.collection('doctors').insertOne(query, function (err, result) {
                         if (result) {
-                            res.send(JSON.stringify({"state": "success", "accessCode" : query.accessCode.toString()}));
+                            res.send(JSON.stringify({"state": "success"}));
                         } else {
                             res.send(JSON.stringify({"state": "error", "message": "insertion failed"}));
                         }
@@ -454,6 +454,30 @@ app.post('/createDoctor', function (req, res) {
                 client.close();
             });
         }
+    });
+});
+
+app.post('/confirmDoctor', function (req, res) {
+    res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+    MongoClient.connect(url, function (err, client) {
+        const db = client.db(dbName);
+        var query = {
+            _id : ObjectId(req.body.doctorId),
+        };
+        var update = {
+            $set : {
+                isConfirm : true,
+                accessCode: Math.floor(1000 + Math.random() * 9000)
+            }
+        };
+        db.collection('doctors').findOneAndUpdate(query, update, function (err, result) {
+            if (result.value != null) {
+                res.send(JSON.stringify({"state": "success"}));
+            } else {
+                res.send(JSON.stringify({"state": "error", "message" : "bad id"}));
+            }
+            client.close();
+        });
     });
 });
 
