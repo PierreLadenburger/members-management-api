@@ -42,7 +42,8 @@ app.post('/createUser', function (req, res) {
                 lastname: req.body.lastname,
                 dateOfBirth: req.body.dateOfBirth,
                 creationDate: new Date(),
-                firstConnection : true
+                firstConnection : true,
+                conversations : []
             };
             var checkEmail = {
                 email: req.body.email
@@ -432,7 +433,8 @@ app.post('/createDoctor', function (req, res) {
                 isConfirm : false,
                 speciality : req.body.speciality,
                 rpps: req.body.rpps,
-                firstConnection : true
+                firstConnection : true,
+                conversations : []
             };
             var checkEmail = {
                 email: req.body.email
